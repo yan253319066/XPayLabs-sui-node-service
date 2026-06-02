@@ -1,5 +1,5 @@
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
-import { fromHEX } from '@mysten/sui/utils';
+import { fromHex } from '@mysten/sui/utils';
 import { decrypt } from '../utils/encryption.js';
 
 /**
@@ -12,7 +12,7 @@ export function createSignerFromEncryptedKey(encryptedPrivateKey) {
         // 解密私钥
         const privateKeyHex = decrypt(encryptedPrivateKey);
         // 创建签名者
-        const secretKey = fromHEX(privateKeyHex);
+        const secretKey = fromHex(privateKeyHex);
         const keypair = Ed25519Keypair.fromSecretKey(secretKey);
         return keypair;
     } catch (error) {

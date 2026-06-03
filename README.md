@@ -1,4 +1,4 @@
-# SUI 区块链服务
+# SUI 区块链服务 @mysten/sui 2.17.0
 
 这是一个基于Node.js的SUI区块链服务，可以通过REST API从Spring Boot应用安全调用。该服务支持SUI代币和自定义代币转账功能，并提供安全的私钥管理机制。
 

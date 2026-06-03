@@ -4,13 +4,15 @@
  * 以固定速率向桶中填充令牌，每次请求消耗一个令牌。
  * 当桶为空时请求进入等待队列，直到有可用令牌或超时。
  *
- * 默认配置：每30秒补充80个令牌（对应Sui公共RPC限制100 req/30s，预留缓冲）
+ * 默认配置可通过环境变量覆盖：
+ *   RATE_LIMIT_TOKENS    - 桶容量（默认 500）
+ *   RATE_LIMIT_WINDOW_MS - 填充窗口，单位毫秒（默认 30000）
  */
 
 // 默认令牌桶容量（最大并发令牌数）
-const RATE_LIMIT_TOKENS = 80
+const RATE_LIMIT_TOKENS = Number.parseInt(process.env.RATE_LIMIT_TOKENS, 10) || 500
 // 令牌桶填充窗口（毫秒）
-const RATE_LIMIT_WINDOW_MS = 30000
+const RATE_LIMIT_WINDOW_MS = Number.parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 30000
 
 export class TokenBucket {
   /**

@@ -52,7 +52,7 @@ export async function getAllCoins(address, network = 'testnet') {
  */
 export async function transferSUI(signer, recipient, amount, network = 'testnet') {
   try {
-    console.log(signer, recipient, amount, network)
+    console.log('转账 SUI:', { recipient, amount, network })
     const tx = new Transaction()
 
     // 从gas中分割代币
@@ -145,7 +145,7 @@ function mapOldFilterToGraphQL(oldFilter) {
   const gql = {}
   if (oldFilter.FromAddress) gql.sentAddress = oldFilter.FromAddress
   if (oldFilter.ToAddress) gql.affectedAddress = oldFilter.ToAddress
-  if (oldFilter.Checkpoint !== undefined) gql.atCheckpoint = oldFilter.Checkpoint?.toString()
+  if (oldFilter.Checkpoint !== undefined) gql.atCheckpoint = Number(oldFilter.Checkpoint)
   if (oldFilter.MoveFunction) {
     gql.function = oldFilter.MoveFunction.function
   }
@@ -179,8 +179,8 @@ const TRANSACTION_BLOCK_QUERY = `
           objectChanges {
             nodes {
               address
-              inputState
-              outputState
+              inputState { version digest }
+              outputState { version digest }
             }
           }
           dependencies { nodes { digest } }
@@ -213,14 +213,19 @@ export async function queryTransactionBlocks(network = 'testnet', query = {}, li
 
     return withRateLimit(async () => {
       const filter = mapOldFilterToGraphQL(query)
+      const safeLimit = Math.min(limit, 50)
       const result = await getGraphQLClient(network).query({
         query: TRANSACTION_BLOCK_QUERY,
         variables: {
           after: cursor,
-          first: limit,
+          first: safeLimit,
           filter,
         },
       })
+      if (result.errors?.length) {
+        console.error(`${new Date()} 查询交易区块 GraphQL 错误:`, JSON.stringify(result.errors))
+      }
+      // console.log('查询交易区块结果:', result.data?.transactions?.nodes?.length || 0, '条记录')
       return {
         data: result.data?.transactions?.nodes || [],
         hasNextPage: result.data?.transactions?.pageInfo?.hasNextPage || false,
@@ -252,9 +257,12 @@ export async function getTransactionBlock(digest, network = 'testnet') {
           objectTypes: true,
         },
       })
+      if (!result) {
+        throw new Error(`未找到交易区块: ${digest}`)
+      }
       return {
         digest: result.digest,
-        effects: result.effects.bcs
+        effects: result.effects?.bcs
           ? { bcs: Array.from(result.effects.bcs), ...result.effects }
           : result.effects,
         events: result.events,
@@ -289,6 +297,9 @@ export async function getLatestCheckpointSequenceNumber(network = 'testnet') {
   try {
     return withRateLimit(async () => {
       const result = await getGraphQLClient(network).query({ query: LATEST_CHECKPOINT_QUERY })
+      if (result.errors?.length) {
+        console.error(`${new Date()} 获取最新检查点 GraphQL 错误:`, JSON.stringify(result.errors))
+      }
       return result.data?.checkpoints?.nodes?.[0]?.sequenceNumber?.toString()
     }, network)
   } catch (error) {
@@ -329,6 +340,9 @@ export async function getCheckpoint(checkpointId, network = 'testnet') {
         query: CHECKPOINT_QUERY,
         variables,
       })
+      if (result.errors?.length) {
+        console.error(`${new Date()} 获取检查点 GraphQL 错误:`, JSON.stringify(result.errors))
+      }
       return result.data?.checkpoint
     }, network)
   } catch (error) {
@@ -368,13 +382,18 @@ export async function getCheckpoints(options = {}, network = 'testnet') {
   try {
     return withRateLimit(async () => {
       const descending = options.descendingOrder !== false
+      const rawLimit = options.limit || 10
+      const safeLimit = Math.min(rawLimit, 50)
       const variables = descending
-        ? { before: options.cursor || null, last: options.limit || 10 }
-        : { after: options.cursor || null, first: options.limit || 10 }
+        ? { before: options.cursor || null, last: safeLimit }
+        : { after: options.cursor || null, first: safeLimit }
       const result = await getGraphQLClient(network).query({
         query: CHECKPOINTS_QUERY,
         variables,
       })
+      if (result.errors?.length) {
+        console.error(`${new Date()} 获取检查点列表 GraphQL 错误:`, JSON.stringify(result.errors))
+      }
       return {
         data: result.data?.checkpoints?.nodes || [],
         hasNextPage: result.data?.checkpoints?.pageInfo?.hasPreviousPage || false,

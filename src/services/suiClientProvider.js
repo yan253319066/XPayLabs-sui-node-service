@@ -9,12 +9,12 @@
 import { SuiGraphQLClient } from '@mysten/sui/graphql'
 import { getRateLimiter } from '../utils/rateLimiter.js'
 
-// 各网络对应的 GraphQL 端点
+// 各网络对应的 GraphQL 端点（优先读取环境变量，否则使用默认公共端点）
 const GRAPHQL_URLS = {
-  mainnet: 'https://graphql.mainnet.sui.io/graphql',
-  testnet: 'https://graphql.testnet.sui.io/graphql',
-  devnet: 'https://graphql.devnet.sui.io/graphql',
-  localnet: 'http://127.0.0.1:9125/graphql',
+  mainnet: process.env.MAINNET_GRAPHQL_URL || 'https://graphql.mainnet.sui.io/graphql',
+  testnet: process.env.TESTNET_GRAPHQL_URL || 'https://graphql.testnet.sui.io/graphql',
+  devnet: process.env.DEVNET_GRAPHQL_URL || 'https://graphql.devnet.sui.io/graphql',
+  localnet: process.env.LOCALNET_GRAPHQL_URL || 'http://127.0.0.1:9125/graphql',
 }
 
 // 客户端缓存（按网络）

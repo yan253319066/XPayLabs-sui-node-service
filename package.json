@@ -1,4 +1,9 @@
 {
+  "name": "xpaylabs-sui-node-service",
+  "version": "0.1.0",
+  "description": "XPay Labs — SUI blockchain RPC proxy service (Express) for transaction scanning and submission.",
+  "author": "XPay Labs",
+  "keywords": ["xpaylabs", "xpay", "sui", "blockchain", "rpc-proxy"],
   "type": "module",
   "dependencies": {
     "@mysten/sui": "^1.43.2",

@@ -49,4 +49,4 @@ npm run prod     # Production mode
 
 ## License
 
-MIT
+[MIT](LICENSE)
